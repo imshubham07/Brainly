@@ -123,14 +123,20 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/content", userMiddleware, async (req, res) => {
+app.delete("/api/v1/content/:id", userMiddleware, async (req, res) => {
   try {
-    const contentId = req.body.contentId;
+    const contentId = req.params.id;
 
-    await ContentModel.deleteMany({
-      contentId,
+    const result = await ContentModel.findOneAndDelete({
+      _id: contentId,
       userId: req.userId,
     });
+    
+    if (!result) {
+      res.status(404).json({ message: "Content not found or you don't have permission to delete it" });
+      return;
+    }
+    
     res.json({
       message: "Content deleted successfully",
     });
@@ -140,16 +146,19 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
+// Share Brain Endpoints
+
+// Endpoint to create or remove a share link
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
   try {
     const share = req.body.share;
     if (share) {
-      const existingLInk = await LinkModel.findOne({
+      const existingLink = await LinkModel.findOne({
         userId: req.userId,
       });
-      if (existingLInk) {
+      if (existingLink) {
         res.json({
-          hash: existingLInk.hash,
+          hash: existingLink.hash,
         });
         return;
       }
@@ -159,7 +168,7 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
         hash: hash,
       });
       res.json({
-        msg: "updated shared sucessfully",
+        msg: "updated shared successfully",
         hash,
       });
     } else {
@@ -171,37 +180,70 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
       });
     }
   } catch (error) {
-    res.json({
-      msg: "somthing went wrong",
+    res.status(500).json({
+      msg: "something went wrong",
     });
   }
 });
 
-
-app.get("/api/v1/brain/:shareLink", async (req, res) => {
+// Add this new endpoint to match the frontend expectation
+app.get("/api/v1/brain/share/:hash", async (req, res) => {
   try {
-    const hash = req.params.shareLink;
-
+    const hash = req.params.hash;
     const link = await LinkModel.findOne({
       hash,
     });
+    if (!link) {
+      res.status(404).json({
+        message: "Share link not found or expired",
+      });
+      return;
+    }
+    const contents = await ContentModel.find({
+      userId: link.userId,
+    });
+    const user = await UserModel.findOne({
+      _id: link.userId,
+    });
+    if (!user) {
+      res.status(404).json({
+        message: "User not found",
+      });
+      return;
+    }
+    res.json({
+      username: user?.username,
+      contents: contents, // Changed to "contents" to match frontend expectation
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+});
 
+// Keep the original endpoint for backward compatibility
+app.get("/api/v1/brain/:shareLink", async (req, res) => {
+  try {
+    const hash = req.params.shareLink;
+    const link = await LinkModel.findOne({
+      hash,
+    });
     if (!link) {
       res.status(411).json({
-        message: "Sorry Incorect input",
+        message: "Sorry Incorrect input",
       });
       return;
     }
     const content = await ContentModel.find({
       userId: link.userId,
     });
-
     const user = await UserModel.findOne({
       _id: link.userId,
     });
     if (!user) {
       res.status(411).json({
-        message: "user not Found, error  should ideally not",
+        message: "user not Found, error should ideally not",
       });
       return;
     }
@@ -210,8 +252,33 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
       content: content,
     });
   } catch (error) {
-    res.json({
+    res.status(500).json({
       message: "something went wrong",
+    });
+  }
+});
+
+// Add this new endpoint to check if a brain is currently shared
+app.get("/api/v1/brain/share/status", userMiddleware, async (req, res) => {
+  try {
+    const existingLink = await LinkModel.findOne({
+      userId: req.userId,
+    });
+    
+    if (existingLink) {
+      res.json({
+        isShared: true,
+        hash: existingLink.hash
+      });
+    } else {
+      res.json({
+        isShared: false
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+      isShared: false
     });
   }
 });
