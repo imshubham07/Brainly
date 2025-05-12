@@ -16,15 +16,15 @@ function getYoutubeVideoId(url: string): string | null {
 }
 
 // Twitter/X helpers
-function getTwitterId(url: string): string | null {
-    const regex = /twitter\.com\/\w+\/status\/(\d+)/;
-    const xRegex = /x\.com\/\w+\/status\/(\d+)/;
+// function getTwitterId(url: string): string | null {
+//     const regex = /twitter\.com\/\w+\/status\/(\d+)/;
+//     const xRegex = /x\.com\/\w+\/status\/(\d+)/;
     
-    const twitterMatch = url.match(regex);
-    const xMatch = url.match(xRegex);
+//     const twitterMatch = url.match(regex);
+//     const xMatch = url.match(xRegex);
     
-    return (twitterMatch && twitterMatch[1]) || (xMatch && xMatch[1]) || null;
-}
+//     return (twitterMatch && twitterMatch[1]) || (xMatch && xMatch[1]) || null;
+// }
 
 // LinkedIn helpers
 function getLinkedInPostId(url: string): string | null {
@@ -48,11 +48,11 @@ function parseGitHubUrl(url: string): { owner: string, repo: string, path?: stri
 }
 
 // Instagram helpers
-function getInstagramPostId(url: string): string | null {
-    const regex = /instagram\.com\/p\/([^\/]+)/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-}
+// function getInstagramPostId(url: string): string | null {
+//     const regex = /instagram\.com\/p\/([^\/]+)/;
+//     const match = url.match(regex);
+//     return match ? match[1] : null;
+// }
 
 // Main component for embedding content from various platforms
 export function EnhancedEmbedContent({ link, type, className = "", isDashboard = false }: EnhancedEmbedContentProps) {
@@ -188,7 +188,6 @@ export function EnhancedEmbedContent({ link, type, className = "", isDashboard =
 
     // Twitter/X Embed
     if (type === "x") {
-        const tweetId = getTwitterId(link);
         
         // Dashboard preview for Twitter/X
         if (isDashboard) {
@@ -231,7 +230,6 @@ export function EnhancedEmbedContent({ link, type, className = "", isDashboard =
 
     // Instagram Embed
     if (type === "instagram") {
-        const postId = getInstagramPostId(link);
         
         // Dashboard preview for Instagram
         if (isDashboard) {

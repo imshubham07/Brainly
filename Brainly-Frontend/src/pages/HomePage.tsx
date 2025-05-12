@@ -231,6 +231,7 @@ export function HomePage() {
               {/* YouTube */}
               <div className="text-center">
                 <div className="flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mx-auto">
+                  //@ts-expect-error
                   <YoutubeIcon className="h-8 w-8 text-red-600" />
                 </div>
                 <h3 className="mt-3 text-lg font-medium">YouTube</h3>
